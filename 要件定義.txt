@@ -1,0 +1,77 @@
+イベント情報の登録、検索、年度別表示、カレンダー表示、関連資料のアップロード・閲覧機能などを提供するPC向けウェブサイト
+(1)イベント一覧画面:年度別イベント一覧表示、イベント検索、年間カレンダー表示、イベント詳細リンク
+(2)イベント詳細画面:イベント基本情報表示、資料一覧表示、資料のダウンロード、主催者コメント表示、イベント編集・削除機能
+(3)イベント登録画面:イベント名入力、主催者名入力、開催日入力、概要説明、資料のアップロード機能、主催者コメント記述欄、
+(4)ログイン機能
+
+React vite,FastApi,SQLite
+✅ React (Vite) プロジェクトの初期化
+
+✅ FastAPI の初期ファイル作成
+
+✅ SQLite とイベントモデルの作成
+
+✅ React から FastAPI に「Hello」通信
+
+✅ ファイルアップロード or ログイン機能の実装
+
+frontend/
+ ├── src/
+ │   ├── App.tsx
+ │   ├── main.tsx
+ │   ├── types.ts                # 型定義
+ │   ├── api/
+ │   │    └── events.ts          # FastAPI API 通信
+ │   ├── components/
+ │   │    ├── Login.tsx
+ │   │    ├── EventList.tsx
+ │   │    ├── EventDetail.tsx
+ │   │    ├── EventForm.tsx
+ │   │    └── CalendarView.tsx
+ └── index.html
+
+
+backend/
+ ├── main.py          # FastAPI エントリポイント
+ ├── database.py      # DB接続設定
+ ├── models.py        # SQLAlchemy モデル
+ ├── schemas.py       # Pydantic スキーマ
+ └── crud.py          # DB操作ロジック
+
+
+[React フロント]
+  |
+  | GET /events
+  v
+[main.py (FastAPI)]
+  ├─ ルーティングで /events にマッチ
+  └─ Depends(get_db) で DB セッションを取得
+      |
+      v
+[crud.py]
+  └─ get_events(db) を呼ぶ
+      |
+      v
+[models.py + SQLAlchemy]
+  └─ Event テーブルから全データ取得
+      |
+      v
+[SQLite DB ファイル]
+  └─ 実際のデータが保存されている場所
+      |
+      v
+[crud.py]
+  └─ Python オブジェクトのリストとして返す
+      |
+      v
+[schemas.py (Pydantic)]
+  └─ Python オブジェクト → JSON に変換
+      |
+      v
+[main.py]
+  └─ JSON をレスポンスとして返す
+      |
+      v
+[React フロント]
+  └─ JSON を受け取り、EventList などのコンポーネントで描画
+
