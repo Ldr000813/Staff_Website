@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
 from typing import List
 from urllib.parse import unquote
-import models, schemas, crud
 import os
+
+import models, schemas, crud
 from database import SessionLocal, engine
 
-# DB初期化
+# ===== DB初期化 =====
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -25,12 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ===== フロントエンド (静的ファイル) =====
-frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
-
-if os.path.exists(frontend_dir):
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 # ===== アップロード設定 =====
 UPLOAD_DIR = "uploads"
@@ -124,7 +119,9 @@ async def download_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=decoded_filename)
 
-# ===== React Router のために index.html を返す =====
+# ===== React Router 用 catch-all GET =====
+frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
+
 @app.get("/{full_path:path}")
 async def serve_react(full_path: str):
     # /api で始まるパスは React に渡さない
@@ -134,3 +131,7 @@ async def serve_react(full_path: str):
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
+
+# ===== StaticFiles mount (最後に置く) =====
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
