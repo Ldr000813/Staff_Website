@@ -119,9 +119,12 @@ async def download_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=decoded_filename)
 
-# ===== React Router 用 catch-all GET =====
+# ===== フロントエンド (静的ファイル) =====
 frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
+# ===== React Router 用 catch-all GET =====
 @app.get("/{full_path:path}")
 async def serve_react(full_path: str):
     # /api で始まるパスは React に渡さない
@@ -131,7 +134,3 @@ async def serve_react(full_path: str):
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
-
-# ===== StaticFiles mount (最後に置く) =====
-if os.path.exists(frontend_dir):
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
