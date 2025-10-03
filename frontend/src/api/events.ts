@@ -3,7 +3,7 @@ import axios from "axios";
 import type { Event } from "../types";
 
 
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = "https://staff-website-backend.onrender.com";
 
 //イベント一覧
 export async function fetchEvents(): Promise<Event[]> {

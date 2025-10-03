@@ -13,7 +13,7 @@ export default function Login() {
     if (!username || !password) return;
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/login", {
+      const res = await fetch("https://staff-website-backend.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -40,7 +40,7 @@ export default function Login() {
   // 新規ユーザー登録
   const handleRegisterSubmit = async (values: { username: string; password: string }) => {
     try {
-      const res = await fetch("http://localhost:8000/register", {
+      const res = await fetch("https://staff-website-backend.onrender.com/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
