@@ -52,9 +52,7 @@ def get_db():
         db.close()
 
 # チュートリアル用
-@app.get("/api/")
-async def root():
-    return {"message": "Hello, FastAPI!"}
+app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="frontend")
 
 # イベント一覧取得
 @app.get("/api/events/", response_model=list[schemas.Event])
