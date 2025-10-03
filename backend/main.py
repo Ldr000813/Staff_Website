@@ -14,16 +14,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# CORS 設定（React 開発サーバーからのアクセスを許可）
+# ===== CORS (開発用のみ) =====
 origins = [
-    "http://localhost:5173",
-    "https://staff-website-backend.onrender.com",
-    "https://staff-website-hd6pi4j7w-ls-projects-541fc566.vercel.app"
-    ]
-
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
+    "http://localhost:5173",  # Vite dev server
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -32,18 +26,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 投稿可能なファイル形式
+# ===== フロントエンド (静的ファイル) =====
+frontend_dir = os.path.join(os.path.dirname(__file__), "../frontend/dist")
+
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+# ===== アップロード設定 =====
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 ALLOWED_TYPES = [
-    "application/msword",  # .doc
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
-    "application/vnd.ms-excel",  # .xls
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # .xlsx
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "image/jpeg",
     "image/png",
     "image/gif",
 ]
 
-# DBセッション依存関数
+# ===== DBセッション依存関数 =====
 def get_db():
     db = SessionLocal()
     try:
@@ -51,15 +54,15 @@ def get_db():
     finally:
         db.close()
 
-# チュートリアル用
-app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="frontend")
+# ===== API =====
+@app.get("/api/")
+async def root():
+    return {"message": "Hello, FastAPI!"}
 
-# イベント一覧取得
 @app.get("/api/events/", response_model=list[schemas.Event])
 def read_events(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return crud.get_events(db, skip=skip, limit=limit)
 
-# ログイン
 @app.post("/api/login")
 def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_username = crud.get_user_by_username(db, user.username)
@@ -70,7 +73,6 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="パスワードが正しくありません")
     return {"id": db_user.id, "username": db_user.username}
 
-# 新規登録
 @app.post("/api/register")
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     existing_user = crud.get_user_by_username(db, user.username)
@@ -79,12 +81,10 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = crud.create_user(db, user)
     return {"id": new_user.id, "username": new_user.username}
 
-# 検索機能
 @app.get("/api/events/search", response_model=list[schemas.Event])
 def search_events(keyword: str, db: Session = Depends(get_db)):
     return crud.search_events(db, keyword)
 
-# ファイル投稿（複数ファイル対応）
 @app.post("/api/events/", response_model=schemas.Event)
 async def create_event_with_file(
     name: str = Form(...),
@@ -95,21 +95,17 @@ async def create_event_with_file(
     db: Session = Depends(get_db)
 ):
     saved_files = []
-
     for file in files:
-        # ファイル形式チェック
         if file.content_type not in ALLOWED_TYPES:
             raise HTTPException(
                 status_code=400,
                 detail=f"対応形式は Word(.doc, .docx), Excel(.xls, .xlsx), 画像(.jpg, .jpeg, .png, .gif) のみです: {file.filename}"
             )
-
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as f:
             f.write(await file.read())
         saved_files.append(file.filename)
 
-    # DB にカンマ区切りでファイル名保存
     event_data = schemas.EventCreate(
         name=name,
         description=description,
@@ -120,7 +116,6 @@ async def create_event_with_file(
     new_event = crud.create_event(db=db, event=event_data)
     return new_event
 
-# ファイルダウンロード（個別ファイル）
 @app.get("/api/files/{filename}")
 async def download_file(filename: str):
     decoded_filename = unquote(filename)
@@ -128,3 +123,11 @@ async def download_file(filename: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=decoded_filename)
+
+# ===== React Router のために index.html を返す =====
+@app.get("/{full_path:path}")
+async def serve_react(full_path: str):
+    index_path = os.path.join(frontend_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
