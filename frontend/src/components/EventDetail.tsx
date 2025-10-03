@@ -24,7 +24,7 @@ export default function EventDetail({ event }: Props) {
             {files.map((file, index) => (
               <li key={index}>
                 <a
-                  href={`https://staff-website-backend.onrender.com/files/${encodeURIComponent(file)}`}
+                  href={`https://staff-website-backend.onrender.com/api/files/${encodeURIComponent(file)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -31,7 +31,7 @@ export default function EventForm(){
 
      files.forEach((file) => formData.append("files", file));
 
-    const response = await fetch("https://staff-website-backend.onrender.com/events/", {
+    const response = await fetch("https://staff-website-backend.onrender.com/api/events/", {
       method: "POST",
       body: formData,
     });

@@ -34,7 +34,7 @@ export default function EventList(){
                       <li key={index}>
                         <Button
                           type="link"
-                          href={`https://staff-website-backend.onrender.com/files/${encodeURIComponent(file)}`}
+                          href={`https://staff-website-backend.onrender.com/api/files/${encodeURIComponent(file)}`}
                           target="_blank"
                         >
                           {file}
