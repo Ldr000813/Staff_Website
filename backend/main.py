@@ -127,6 +127,9 @@ async def download_file(filename: str):
 # ===== React Router のために index.html を返す =====
 @app.get("/{full_path:path}")
 async def serve_react(full_path: str):
+    # /api で始まるパスは React に渡さない
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API route not found")
     index_path = os.path.join(frontend_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
