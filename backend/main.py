@@ -183,18 +183,19 @@ def delete_event(event_id: int, db: Session = Depends(get_db)):
     db.delete(event)
     db.commit()
     return {"message": f"Event {event_id} deleted successfully"}
-# ===== フロントエンド (静的ファイル) =====
-# frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
-# if os.path.exists(frontend_dir):
-#     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
-# # ===== React Router 用 catch-all GET =====
-# @app.get("/{full_path:path}")
-# async def serve_react(full_path: str):
-#     # /api で始まるパスは React に渡さない
-#     if full_path.startswith("api/"):
-#         raise HTTPException(status_code=404, detail="API route not found")
-#     index_path = os.path.join(frontend_dir, "index.html")
-#     if os.path.exists(index_path):
-#         return FileResponse(index_path)
-#     return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
+#===== フロントエンド (静的ファイル) =====
+frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+# ===== React Router 用 catch-all GET =====
+@app.get("/{full_path:path}")
+async def serve_react(full_path: str):
+    # /api で始まるパスは React に渡さない
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API route not found")
+    index_path = os.path.join(frontend_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
