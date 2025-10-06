@@ -2,7 +2,7 @@
 import axios from "axios";
 import type { Event } from "../types";
 
-const BASE_URL = "/api";
+const BASE_URL = "https://staff-website-backend.onrender.com/api";
 
 //イベント一覧
 export async function fetchEvents(): Promise<Event[]> {

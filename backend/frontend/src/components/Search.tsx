@@ -62,7 +62,7 @@ export default function Search() {
                       renderItem={(file) => (
                         <List.Item>
                           <Link
-                            href={`/api/files/${encodeURIComponent(
+                            href={`https://staff-website-backend.onrender.com/api/files/${encodeURIComponent(
                               file
                             )}`}
                             target="_blank"

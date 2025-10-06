@@ -28,7 +28,7 @@ export default function Update() {
 
   useEffect(() => {
     axios
-      .get(`/api/events/${id}`)
+      .get(`https://staff-website-backend.onrender.com/api/events/${id}`)
       .then((res) => {
         setFormData({ ...res.data, files: [] });
         setOriginalData(res.data);
@@ -93,7 +93,7 @@ const handleSubmit = async () => {
     : [];
   data.append("existing_files", remainingFiles.join(","));
 
-  await axios.put(`/api/events/${id}`, data, {
+  await axios.put(`https://staff-website-backend.onrender.com/api/events/${id}`, data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 
@@ -106,7 +106,7 @@ const handleSubmit = async () => {
     if (!window.confirm("このイベントを削除してもよろしいですか？")) return;
 
     try {
-      await axios.delete(`/api/events/${id}`);
+      await axios.delete(`https://staff-website-backend.onrender.com/api/events/${id}`);
       alert("イベントを削除しました");
       navigate("/app"); // 一覧画面へ戻す
     } catch (error) {
