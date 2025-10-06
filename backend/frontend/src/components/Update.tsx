@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Row, Col, Card, Input, Button, Typography, Space, Popconfirm } from "antd";
+import { Row, Col, Card, Input, Button, Typography, Space } from "antd";
 import dayjs from "dayjs";
 
 const { Title, Text, Link } = Typography;
