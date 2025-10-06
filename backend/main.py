@@ -21,7 +21,6 @@ app = FastAPI()
 #このURLからのアクセスを許可
 origins = [
     "http://localhost:5173",
-    "https://staff-website-ten.vercel.app"
 ]
 
 app.add_middleware(
