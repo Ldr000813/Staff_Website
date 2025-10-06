@@ -3,22 +3,26 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from urllib.parse import unquote
 import os
 
 import models, schemas, crud
 from database import SessionLocal, engine
+from models import Event
+
 
 # ===== DB初期化 =====
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# ===== CORS (開発用のみ) =====
+#このURLからのアクセスを許可
 origins = [
-    "http://localhost:5173",  # Vite dev server
+    "http://localhost:5173",
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -86,6 +90,7 @@ async def create_event_with_file(
     description: str = Form(...),
     date: str = Form(...),
     organizer: str = Form(...),
+    comment: Optional[str] = Form(None),
     files: List[UploadFile] = File([]),
     db: Session = Depends(get_db)
 ):
@@ -106,6 +111,7 @@ async def create_event_with_file(
         description=description,
         date=date,
         organizer=organizer,
+        comment=comment,
         file_path=",".join(saved_files) if saved_files else None
     )
     new_event = crud.create_event(db=db, event=event_data)
@@ -119,18 +125,76 @@ async def download_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=decoded_filename)
 
-# ===== フロントエンド (静的ファイル) =====
-frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
-if os.path.exists(frontend_dir):
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+@app.get("/api/events/{event_id}", response_model=schemas.Event)
+def read_event(event_id: int, db: Session = Depends(get_db)):
+    db_event = crud.get_event(db, event_id)
+    if not db_event:
+        raise HTTPException(status_code=404, detail="イベントが見つかりません")
+    return db_event
 
-# ===== React Router 用 catch-all GET =====
-@app.get("/{full_path:path}")
-async def serve_react(full_path: str):
-    # /api で始まるパスは React に渡さない
-    if full_path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="API route not found")
-    index_path = os.path.join(frontend_dir, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"detail": "Frontend not built. Run 'npm run build' in frontend."}
+# イベント編集
+# events.py など更新用の API
+@app.put("/api/events/{event_id}", response_model=schemas.Event)
+async def update_event_with_file(
+    event_id: int,
+    name: str = Form(...),
+    description: str = Form(...),
+    date: str = Form(...),
+    organizer: str = Form(...),
+    comment: str = Form(None),
+    existing_files: str = Form(""),  # フロントから残すファイルリストを受け取る
+    files: List[UploadFile] = File([]),
+    db: Session = Depends(get_db)
+):
+    db_event = crud.get_event(db, event_id)
+    if not db_event:
+        raise HTTPException(status_code=404, detail="イベントが見つかりません")
+
+    # 新規ファイル保存
+    saved_files = []
+    for file in files:
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        saved_files.append(file.filename)
+
+    # 残す既存ファイル + 新規追加ファイルを結合
+    remaining_files = existing_files.split(",") if existing_files else []
+    all_files = remaining_files + saved_files
+
+    updated_data = schemas.EventUpdate(
+        name=name,
+        description=description,
+        date=date,
+        organizer=organizer,
+        comment=comment,
+        file_path=",".join(all_files) if all_files else None
+    )
+
+    updated_event = crud.update_event(db, event_id, updated_data)
+    return updated_event
+
+@app.delete("/api/events/{event_id}")
+def delete_event(event_id: int, db: Session = Depends(get_db)):
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    db.delete(event)
+    db.commit()
+    return {"message": f"Event {event_id} deleted successfully"}
+# ===== フロントエンド (静的ファイル) =====
+# frontend_dir = os.path.join(os.path.dirname(__file__), "frontend/dist")
+# if os.path.exists(frontend_dir):
+#     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+# # ===== React Router 用 catch-all GET =====
+# @app.get("/{full_path:path}")
+# async def serve_react(full_path: str):
+#     # /api で始まるパスは React に渡さない
+#     if full_path.startswith("api/"):
+#         raise HTTPException(status_code=404, detail="API route not found")
+#     index_path = os.path.join(frontend_dir, "index.html")
+#     if os.path.exists(index_path):
+#         return FileResponse(index_path)
+#     return {"detail": "Frontend not built. Run 'npm run build' in frontend."}

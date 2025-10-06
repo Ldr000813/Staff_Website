@@ -6,6 +6,7 @@ import CalendarView from "./components/CalendarView";
 import DateDetail from "./components/DateDetail";
 import EventList from "./components/EventList";
 import Search from "./components/Search";
+import Update from "./components/Update";
 
 export default function Router() {
   return (
@@ -18,6 +19,7 @@ export default function Router() {
         <Route path="/eventlist" element={<EventList />} /> {/*clear*/}
         <Route path="/calenderview" element={<CalendarView />} />{/*clear*/}
         <Route path="/datedetail/:title" element={<DateDetail />} />{/*clear*/}
+        <Route path="/update/:id" element={<Update />} />
         <Route path="*" element={<Login />} />{/**/}
       </Routes>
     </BrowserRouter>

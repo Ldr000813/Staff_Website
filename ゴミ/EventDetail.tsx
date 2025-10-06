@@ -24,7 +24,7 @@ export default function EventDetail({ event }: Props) {
             {files.map((file, index) => (
               <li key={index}>
                 <a
-                  href={`/api/files/${encodeURIComponent(file)}`}
+                  href={`http://localhost:8000/api/files/${encodeURIComponent(file)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

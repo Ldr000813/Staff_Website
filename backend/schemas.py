@@ -1,5 +1,6 @@
 from pydantic import BaseModel,constr
 from datetime import date
+from typing import List
 
 class EventBase(BaseModel):
     name: str
@@ -11,6 +12,15 @@ class EventBase(BaseModel):
 
 class EventCreate(EventBase):
     pass
+
+class EventUpdate(BaseModel):
+    name: str
+    description: str | None=None
+    date: date
+    organizer: str
+    comment: str | None=None
+    file_path: str | None=None
+    delete_files: List[str] = []
 
 class Event(EventBase):
     id: int

@@ -1,3 +1,7 @@
 npm run dev
 venv\Scripts\activate
 uvicorn main:app --reload
+
+const BASE_URL = "/api";
+/api/events/
+http://localhost:8000/

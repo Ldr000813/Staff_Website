@@ -2,7 +2,6 @@
 import axios from "axios";
 import type { Event } from "../types";
 
-
 const BASE_URL = "/api";
 
 //イベント一覧
@@ -10,6 +9,7 @@ export async function fetchEvents(): Promise<Event[]> {
   const res = await fetch(`${BASE_URL}/events/`);
   return res.json();
 }
+
 //新規イベント登録
 export async function createEvent(eventData: Omit<Event, "id">): Promise<Event> {
   const res = await fetch(`${BASE_URL}/events/`, {
@@ -19,6 +19,7 @@ export async function createEvent(eventData: Omit<Event, "id">): Promise<Event> 
   });
   return res.json();
 }
+
 //イベント検索
 export const searchEvents=async(keyword:string):Promise<Event[]>=>{
   const res=await axios.get(`${BASE_URL}/events/search`,{

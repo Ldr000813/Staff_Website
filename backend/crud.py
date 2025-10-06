@@ -6,6 +6,9 @@ import models, schemas
 def get_events(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Event).offset(skip).limit(limit).all()
 
+def get_event(db: Session, event_id: int):
+    return db.query(models.Event).filter(models.Event.id == event_id).first()
+
 def create_event(db: Session, event: schemas.EventCreate):
     db_event = models.Event(
         name=event.name,
@@ -20,6 +23,15 @@ def create_event(db: Session, event: schemas.EventCreate):
     db.refresh(db_event)
     return db_event
 
+def update_event(db: Session, event_id: int, event: schemas.EventUpdate):
+    db_event = get_event(db, event_id)
+    if not db_event:
+        return None
+    for key, value in event.dict(exclude_unset=True).items():
+        setattr(db_event, key, value)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
 
 #ログイン関連
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
